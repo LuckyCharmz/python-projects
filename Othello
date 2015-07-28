@@ -1,0 +1,277 @@
+__author__ = 'C Crowe with lots of help from R Crowe and R Berg'
+
+import os, sys
+import pygame
+from pygame.locals import *
+if not pygame.font: print 'Warning: fonts disabled'
+if not pygame.mixer: print 'Warning: sound disabled'
+pygame.init()
+
+## define all working variables here ##
+end_game = 0
+end      = 0
+wscore   = 0
+bscore   = 0
+adj_x    = 0
+adj_y    = 0
+valid    = 0
+check_x  = 0
+check_y  = 0
+left_x   = 0
+top_y    = 0
+right_x  = 0
+bottom_y = 0
+center_x = 0
+center_y = 0
+radius_outside = 0
+radius_inside = 0
+play_turn = 0
+trident_x = 0
+trident_y = 0
+width = 800
+height = 800
+height_real = 830
+top_mar = height_real - height
+squares = 8
+b_ = (0, 0, 0)
+w_ = (250, 250, 250)
+line_width = 2
+line_offset = 0
+square_padding = 2
+w_turn = 0
+winner = None
+choices = [[None, None, None, None, None, None, None, None, None, None] \
+         , [None, None, None, None, None, None, None, None, None, None] \
+         , [None, None, None, None, None, None, None, None, None, None] \
+         , [None, None, None, None, None, None, None, None, None, None] \
+         , [None, None, None, None, None, None, None, None, None, None] \
+         , [None, None, None, None, None, None, None, None, None, None] \
+         , [None, None, None, None, None, None, None, None, None, None] \
+         , [None, None, None, None, None, None, None, None, None, None] \
+         , [None, None, None, None, None, None, None, None, None, None] \
+         , [None, None, None, None, None, None, None, None, None, None]]
+
+screen = pygame.display.set_mode((width, height_real))
+
+## define all defined functions here ##
+def play(play_x, play_y, play_turn):
+    global choices
+    global wscore
+    global bscore
+    left_x   = (play_x - 1) * (width  / squares) + square_padding
+    top_y    = (play_y - 1) * (height / squares) + square_padding
+    right_x  = left_x + width / squares - 2*square_padding
+    bottom_y = top_y + height / squares - 2*square_padding
+    center_x = (left_x + right_x ) / 2
+    center_y = (top_y + bottom_y ) / 2 + top_mar
+    radius_outside = (right_x-left_x) / 2
+    radius_inside = radius_outside - 1
+    choices[play_x][play_y] = play_turn
+    if play_turn == 0:
+        pygame.draw.circle(screen, w_, (center_x,center_y), radius_inside)
+    else:
+        pygame.draw.circle(screen, b_, (center_x,center_y), radius_inside)
+def board():
+    global choices
+    pygame.draw.rect(screen, (0, 0, 0), (0, 0, width, top_mar))
+    pygame.draw.rect(screen, (0, 0, 250), (350, 0, 100, top_mar - 5))
+    pygame.draw.rect(screen, (0, 150, 0), (0, top_mar, width, height))
+    pygame.draw.rect(screen, b_, (width*(1.0/squares), top_mar, line_width, height))
+    pygame.draw.rect(screen, b_, (width*(2.0/squares), top_mar, line_width, height))
+    pygame.draw.rect(screen, b_, (width*(3.0/squares), top_mar, line_width, height))
+    pygame.draw.rect(screen, b_, (width*(4.0/squares), top_mar, line_width, height))
+    pygame.draw.rect(screen, b_, (width*(5.0/squares), top_mar, line_width, height))
+    pygame.draw.rect(screen, b_, (width*(6.0/squares), top_mar, line_width, height))
+    pygame.draw.rect(screen, b_, (width*(7.0/squares), top_mar, line_width, height))
+    pygame.draw.rect(screen, b_, (0, height*(1.0/squares)+top_mar, width, line_width))
+    pygame.draw.rect(screen, b_, (0, height*(2.0/squares)+top_mar, width, line_width))
+    pygame.draw.rect(screen, b_, (0, height*(3.0/squares)+top_mar, width, line_width))
+    pygame.draw.rect(screen, b_, (0, height*(4.0/squares)+top_mar, width, line_width))
+    pygame.draw.rect(screen, b_, (0, height*(5.0/squares)+top_mar, width, line_width))
+    pygame.draw.rect(screen, b_, (0, height*(6.0/squares)+top_mar, width, line_width))
+    pygame.draw.rect(screen, b_, (0, height*(7.0/squares)+top_mar, width, line_width))
+    pygame.draw.rect(screen, b_, (width*(2.0/squares)-1, height*(2.0/squares)-1+top_mar, line_width+1, height/2+1))
+    pygame.draw.rect(screen, b_, (width*(6.0/squares)-1, height*(2.0/squares)-1+top_mar, line_width+1, height/2+1))
+    pygame.draw.rect(screen, b_, (width*(2.0/squares)-1, height*(2.0/squares)-1+top_mar, width/2+1, line_width+1))
+    pygame.draw.rect(screen, b_, (width*(2.0/squares)-1, height*(6.0/squares)-1+top_mar, width/2+1, line_width+1))
+    pygame.draw.circle(screen, b_,(200,200+top_mar), 5)
+    pygame.draw.circle(screen, b_,(200,600+top_mar), 5)
+    pygame.draw.circle(screen, b_,(600,200+top_mar), 5)
+    pygame.draw.circle(screen, b_,(600,600+top_mar), 5)
+    choices = [[None, None, None, None, None, None, None, None, None, None] \
+             , [None, None, None, None, None, None, None, None, None, None] \
+             , [None, None, None, None, None, None, None, None, None, None] \
+             , [None, None, None, None, None, None, None, None, None, None] \
+             , [None, None, None, None, None, None, None, None, None, None] \
+             , [None, None, None, None, None, None, None, None, None, None] \
+             , [None, None, None, None, None, None, None, None, None, None] \
+             , [None, None, None, None, None, None, None, None, None, None] \
+             , [None, None, None, None, None, None, None, None, None, None] \
+             , [None, None, None, None, None, None, None, None, None, None]]
+    play(4,4,1)
+    play(4,5,0)
+    play(5,4,0)
+    play(5,5,1)
+    score()
+    scores()
+    scoretext=font.render("Pass", 1,(255,255,255))
+    screen.blit(scoretext, (380, 5))
+def board_reset():
+    global wscore
+    global bscore
+    pygame.time.delay(2000)
+    wscore   = 0
+    bscore   = 0
+    board()
+    pygame.display.flip()
+    pygame.event.clear()
+
+def scores():
+    pygame.draw.rect(screen, (0, 0, 0), (0, 0, 300, top_mar))
+    pygame.draw.rect(screen, (0, 0, 0), (500, 0, 300, top_mar))
+    if w_turn == 0:
+        pygame.draw.circle(screen, w_,(80,15), 5)
+    else:
+        pygame.draw.circle(screen, w_,(580,15), 5)
+    scoretext=font.render('White = %s' % (wscore), 1,(255,255,255))
+    screen.blit(scoretext, (100, 5))
+    scoretext=font.render('Black = %s' % (bscore), 1,(255,255,255))
+    screen.blit(scoretext, (600, 5))
+
+
+def score():
+    global wscore
+    global bscore
+    x = 0
+    y = 0
+    wscore = 0
+    bscore = 0
+    while x < 10:
+        y = 0
+        while y < 10:
+            if choices[x][y] == 0:
+                wscore = wscore + 1
+            elif choices[x][y] == 1:
+                bscore = bscore + 1
+            y = y + 1
+        x = x + 1
+    scores()
+    if (wscore + bscore) > 63 or bscore == 0 or wscore == 0:
+        game_over()
+    
+def move1(check_x, check_y):
+    global valid
+    if  choices[check_x][check_y] != None \
+    and choices[check_x][check_y] != w_turn:
+        adj_x = check_x - trident_x
+        adj_y = check_y - trident_y
+        while True:
+            check_x = check_x + adj_x
+            check_y = check_y + adj_y
+            if check_x > 9 \
+            or check_x < 0 \
+            or check_y > 9 \
+            or check_y < 0:
+                break
+            if choices[check_x][check_y] == None:
+                break
+            if choices[check_x][check_y] == w_turn:
+                valid = 1
+                while True:
+                    if  check_x == trident_x \
+                    and check_y == trident_y:
+                        break
+                    check_x = check_x - adj_x
+                    check_y = check_y - adj_y
+                    play(check_x,check_y,w_turn)
+                break
+def move0():
+    global valid
+    global w_turn
+    valid = 0
+    # print('trident %s, %s' % (trident_x, trident_y))
+    move1(trident_x + 1, trident_y)
+    move1(trident_x + 1, trident_y + 1)
+    move1(trident_x,     trident_y + 1)
+    move1(trident_x - 1, trident_y + 1)
+    move1(trident_x - 1, trident_y)
+    move1(trident_x - 1, trident_y - 1)
+    move1(trident_x,     trident_y - 1)
+    move1(trident_x + 1, trident_y - 1)
+    if valid > 0:
+        play(trident_x, trident_y, w_turn)
+        w_turn = 1 - w_turn
+        
+def game_over():
+    global x
+    global y
+    global top_mar
+    global end_game
+    end_game = 1
+    pygame.draw.rect(screen, (255,255,0), (200, 200, 400, 300))
+    pygame.draw.rect(screen, (0,0,0),     (205, 205, 390, 290))
+    scoretext=endfont.render("GAME OVER", 1,(0,255,0))
+    screen.blit(scoretext, (275, 210))
+    if bscore > wscore:
+        scoretext=endfont.render("Black Wins", 1,(255,255,255))
+        screen.blit(scoretext, (280, 270))            
+    elif wscore > bscore:
+        scoretext=endfont.render("White Wins", 1,(255,255,255))
+        screen.blit(scoretext, (280, 270))            
+    else:
+        scoretext=endfont.render("It's a Tie", 1,(255,255,255))
+        screen.blit(scoretext, (300, 270))            
+    pygame.draw.rect(screen, (0,0,255), (300, 300 + top_mar, 200, 50))
+    scoretext=endfont.render("Replay", 1,(255,255,255))
+    screen.blit(scoretext, (330, 335))            
+    pygame.draw.rect(screen, (0,0,255), (300, 370 + top_mar, 200, 50))
+    scoretext=endfont.render("Quit", 1,(255,255,255))
+    screen.blit(scoretext, (355, 405))            
+
+## program logic starts here ##
+        
+pygame.init()
+pygame.display.set_caption('Othello')
+
+# initialize font; must be called after 'pygame.init()' to avoid 'Font not Initialized' error
+font=pygame.font.Font(None,30)
+endfont=pygame.font.Font(None,60)
+
+
+board()
+
+pygame.display.flip()
+while True:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            sys.exit()
+        elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            pos = pygame.mouse.get_pos()
+            x = pos[0]
+            y = pos[1] - top_mar
+            if end_game == 1:
+                if 300 < x < 500 and 320 < y < 350:
+                    print('yes %s , %s' % (x,y))
+                    end_game = 0
+                    board_reset()
+                elif 300 < x < 500 and 370 < y < 420:
+                    print('yes %s , %s' % (x,y))
+                    pygame.display.quit()
+                    exit(1)
+                else:
+                    print('no %s , %s' % (x,y))
+ 
+            elif y < 0 and 350 < x < 450:
+                w_turn = 1 - w_turn
+                scores()
+                end = end + 1
+                if end > 1:
+                    game_over()
+            else:
+                end = 0
+                trident_x = x / (width /squares)+1
+                trident_y = y / (height/squares)+1
+                if choices[trident_x][trident_y] is None:
+                    move0()
+                    score()
+    pygame.display.flip()
